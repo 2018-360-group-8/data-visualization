@@ -1,22 +1,21 @@
 var width = 700,
     height = 700,
     padding = {
-        left: 20,
+        left: 50,
         right: 20
     };
 var x1 = new Set(),
     x2 = new Set(),
     x3 = new Set(),
     x4 = new Set();
+var axiss ;
 var head = [];
-var tbody, thead,sData;
+var tbody, thead,sData = [];
 var lines, nodes;
 var sdepartment, sport, dport, department;
-var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+function colorful(){
+    return `#${Math.floor(Math.random()*16).toString('16')}${Math.floor(Math.random()*16).toString('16')}${Math.floor(Math.random()*16).toString('16')}`;
+}
 
 d3.json("test.json", function (json) {
     tbody = json.tbody;
@@ -30,14 +29,13 @@ d3.json("test.json", function (json) {
         x3.add(data[2]);
         x4.add(data[3]);
     }) //生成各轴的节点
+    axiss = [x1,x2,x3,x4];
     sdepartment = tbody.map(arr => arr[0]);
     sport = tbody.map(arr => arr[1]);
     dport = tbody.map(arr => arr[2]);
     department = tbody.map(arr => arr[3]);
     render(tbody);
-//  tbody = filterNodes(tbody,'奇舞团',0);
-//  console.log(tbody);
-//  render(tbody);
+
 });
 
 function countStatics(arr) {
@@ -67,11 +65,13 @@ function gendots(x, countObj, scale, start,direct=1) {
 function filterNodes(tbody,nodes,axis){
     let ans = [];
     if(Array.isArray(nodes)){
-        nodes.forEach(function(node){
-            ans.concat( tbody.filter(function(d){
-               return d[axis] === node;
-            })); 
-        })
+        var len = nodes.length;
+        for(var i=0;i<len;i++){
+            var temp = tbody.filter(function(d){
+                return d[axis] === nodes[i];
+             }); 
+             ans.push(...temp);
+        } 
     }else{
         ans = tbody.filter(function(d){
             //console.log(d[axis], nodes);
@@ -80,15 +80,55 @@ function filterNodes(tbody,nodes,axis){
     }
     return ans;
 }
-
+function scaleRange(arr) {
+    var b = [];
+    for (var i = 0,len = arr.size; i < len; i++) {
+        b.push((height*i /len));
+    }
+    return b;
+}
 function render(tbody) {
+    document.body.innerHTML = '';
+    var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+    svg.append("g")
+        .append("text")
+        .text(thead[0])
+        .attr("class","head")
+        .attr("x",17)
+        .attr("transform", function (d, i) {
+            return "translate(0,-8)"; })
+
+    svg.append("g")
+        .append("text")
+        .text(thead[1])
+        .attr("class","head")
+        .attr("x",178)
+        .attr("transform", function (d, i) {
+            return "translate(0,-8)"; })
+    svg.append("g")
+        .append("text")
+        .text(thead[2])
+        .attr("class","head")
+        .attr("x",345)
+        .attr("transform", function (d, i) {
+            return "translate(0,-8)"; })
+    svg.append("g")
+        .append("text")
+        .text(thead[3])
+        .attr("class","head")
+        .attr("x",510)
+        .attr("transform", function (d, i) {
+            return "translate(0,-8)"; })
+
     //console.log(sdepartment,sport,dport,department); 
     var cSdepartment = countStatics(sdepartment);
     var cSport = countStatics(sport);
     var cDport = countStatics(dport);
     var cDepartment = countStatics(department);
-    //console.log(cSdepartment,cSport,cDport,cDepartment);
-
+   
     var scale1 = d3.scaleOrdinal()
         .domain(Array.from(x1))
         .range(scaleRange(x1))
@@ -121,13 +161,7 @@ function render(tbody) {
     var dots = [dots1,dots2,dots3,dots4];
     //console.log(dots1);
 
-    function scaleRange(arr) {
-        var b = [0];
-        for (var i = 1,len = arr.size; i < len; i++) {
-            b.push(700 /(len-i));
-        }
-        return b;
-    }
+    
     var line = d3.line()
         .x(function (d) {
             return d.x;
@@ -163,13 +197,10 @@ function render(tbody) {
         .attr("class", "trait")
     svg.append("g").call(axis4).attr("transform", function (d, i) {
             return "translate(520)"; })
-        .attr("class", "trait")
-        .append("svg:text")
-        .attr("class", "title")
-        .attr("text-anchor", "middle")
-        .attr("y", 12);//生成坐标轴
+        .attr("class", "trait");//生成坐标轴
 
     tbody.forEach(function (data) {
+        var color = colorful();
         svg.append('svg:path')
             .attr('d', line([{
                     x: 40,
@@ -188,31 +219,42 @@ function render(tbody) {
                     y: scale4(data[3])
                 }
             ]))
-            .attr('stroke', function (d, i) {
-                return color(i);
-            })
+            .attr('stroke', color)
             .attr('fill', 'none')
-    })
-    // lines = svg.selectAll("path.node")
-    //         .data(tbody, function (d) {
-    //             return d.name;
-    //         })
-    //         .enter().append("path")
-    //         .attr("class", "node")
-    //         .style("stroke", function (d, i) {
-    //             return color(i);
-    //         });
-    tbody = filterNodes(tbody,'奇舞团',0);
-    //console.log(tbody);
-    var brush = svg.selectAll('g.trait')
-                .attr("class", "brush")
-                .call(d3.brush()
-                .extent([[-30, 0], [30, height]])
-                .on("end", brushed));
-    function brushed() {
-        //过滤数据并重新渲染
-        var selection = d3.event.selection;
-        //lines.classed("selected", selection);
-        console.log(selection[0],selection[1]);
+    })//连线
+
+var brush = svg.selectAll('g.trait')
+            .attr("class", "brush")
+            .call(d3.brush()
+            .extent([[-30, -30], [30, height]])
+            .on("end", brushed));
+}
+function brushed() { //过滤数据并重新渲染
+    var event = d3.event;
+    var selection = event.selection;
+    var origin = {};
+    origin.x1 = event.sourceEvent.clientX-60;
+    origin.y1 = event.sourceEvent.clientY-80 ;
+    origin.x2 = event.sourceEvent.clientX + selection[1][0]-selection[0][0]-60;
+    origin.y2 = event.sourceEvent.clientY + selection[1][1]-selection[0][1]-40;//计算选择区域绝对位置
+    console.log(origin);
+    var nAxis = Math.round((origin.x1)/160);
+    console.log(nAxis,axiss[nAxis]);
+    var len = axiss[nAxis].size;
+    var domainSet = axiss[nAxis]; 
+    var domainY = scaleRange(domainSet);
+    console.log(domainY);
+    domainSet = Array.from(domainSet);
+    xAxis = nAxis*160 +50;
+    var nodes = [];
+    for(var i=0;i<len;i++){
+        //
+        if(domainY[i] > origin.y1 && domainY[i] < origin.y2 && origin.x1 < xAxis && origin.x2 > xAxis-80 ){
+            console.log(domainSet[i]);
+            nodes.push(domainSet[i]);
+        } 
     }
+    sData.push(...filterNodes(tbody,nodes,nAxis)); 
+    //console.log(sData);
+    render(sData);
 }
