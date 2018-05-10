@@ -9,7 +9,7 @@ var x1 = new Set(),
     x3 = new Set(),
     x4 = new Set();
 var head = [];
-var tbody, thead;
+var tbody, thead,sData;
 var lines, nodes;
 var sdepartment, sport, dport, department;
 var color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -34,10 +34,10 @@ d3.json("test.json", function (json) {
     sport = tbody.map(arr => arr[1]);
     dport = tbody.map(arr => arr[2]);
     department = tbody.map(arr => arr[3]);
-    //render(tbody);
-    tbody = filterNodes(tbody,'奇舞团',0);
-	console.log(tbody);
-	render(tbody);
+    render(tbody);
+//  tbody = filterNodes(tbody,'奇舞团',0);
+//  console.log(tbody);
+//  render(tbody);
 });
 
 function countStatics(arr) {
@@ -68,14 +68,13 @@ function filterNodes(tbody,nodes,axis){
     let ans = [];
     if(Array.isArray(nodes)){
         nodes.forEach(function(node){
-            ans = tbody.filter(function(d){
+            ans.concat( tbody.filter(function(d){
                return d[axis] === node;
-            })
-            tbody = ans;
+            })); 
         })
     }else{
         ans = tbody.filter(function(d){
-            console.log(d[axis], nodes);
+            //console.log(d[axis], nodes);
              return d[axis] === nodes;
         })
     }
@@ -120,12 +119,12 @@ function render(tbody) {
     var dots3 = gendots(x3, cDport, scale3,360,-1);
     var dots4 = gendots(x4, cDepartment, scale4,520,-1);
     var dots = [dots1,dots2,dots3,dots4];
-    console.log(dots1);
+    //console.log(dots1);
 
     function scaleRange(arr) {
-        var b = [];
-        for (var i = 0; i < arr.size; i++) {
-            b.push(30 * i);
+        var b = [0];
+        for (var i = 1,len = arr.size; i < len; i++) {
+            b.push(700 /(len-i));
         }
         return b;
     }
@@ -149,7 +148,7 @@ function render(tbody) {
         svg .append('svg:path')
             .attr('d', line(data))
             .attr('stroke','blue')
-            .attr('fill', 'blue');
+            .attr('fill', '#6C9BD2');
     })
     
     svg.append("g").call(axis1).attr("transform", function (d, i) {
@@ -204,18 +203,16 @@ function render(tbody) {
     //             return color(i);
     //         });
     tbody = filterNodes(tbody,'奇舞团',0);
-    console.log(tbody);
-    var axis = svg.selectAll('g.trait')
+    //console.log(tbody);
+    var brush = svg.selectAll('g.trait')
                 .attr("class", "brush")
                 .call(d3.brush()
-                .extent([
-                    [-30, 0],
-                    [30, height]
-                ])
-                .on("start brush end", brushed));
+                .extent([[-30, 0], [30, height]])
+                .on("end", brushed));
     function brushed() {
         //过滤数据并重新渲染
         var selection = d3.event.selection;
         //lines.classed("selected", selection);
+        console.log(selection[0],selection[1]);
     }
 }
