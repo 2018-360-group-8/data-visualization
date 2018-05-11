@@ -10,7 +10,7 @@ var x1 = new Set(),
     x4 = new Set();
 var axiss ;
 var head = [];
-var tbody, thead,sData = [];
+var tbody, thead,sData;
 var lines, nodes;
 var sdepartment, sport, dport, department;
 function colorful(){
@@ -20,6 +20,7 @@ function colorful(){
 d3.json("test.json", function (json) {
     tbody = json.tbody;
     thead = json.thead;
+    sData = json.tbody;
     thead.forEach(function (data) {
         head.push(data);
     }) //生成图例
@@ -248,13 +249,22 @@ function brushed() { //过滤数据并重新渲染
     xAxis = nAxis*160 +50;
     var nodes = [];
     for(var i=0;i<len;i++){
-        //
         if(domainY[i] > origin.y1 && domainY[i] < origin.y2 && origin.x1 < xAxis && origin.x2 > xAxis-80 ){
             console.log(domainSet[i]);
             nodes.push(domainSet[i]);
         } 
     }
-    sData.push(...filterNodes(tbody,nodes,nAxis)); 
-    //console.log(sData);
+    var temp = filterNodes(tbody,nodes,nAxis);
+    console.log(sData);
+    sData = filterArr(temp,sData);
     render(sData);
+}
+function filterArr(arr1,arr2){
+    var res = [];
+    for(var i=0,len1=arr1.length;i<len1;i++){
+        if(arr2.indexOf(arr1[i]) >= 0){
+            res.push(arr1[i]);
+        }
+    }
+    return res;
 }
